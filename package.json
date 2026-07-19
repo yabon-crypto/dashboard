@@ -1,0 +1,11 @@
+{
+  "name": "daily-dashboard",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "cd frontend && npm install && npx vite build",
+    "start": "cd backend && node src/index.js",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
+  }
+}
