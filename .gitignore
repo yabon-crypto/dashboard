@@ -6,5 +6,4 @@ backend/.env
 frontend/.env
 *.log
 dist/
-frontend/dist/
 backend/data/
