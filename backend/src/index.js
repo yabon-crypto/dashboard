@@ -83,26 +83,39 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
-const sentToday = {};
-cron.schedule('* * * * *', async () => {
+function todayKey() {
+  return new Date().toISOString().split('T')[0];
+}
+
+async function checkAndSendNotifications() {
   const users = db.prepare('SELECT * FROM users').all();
+  const todayStr = todayKey();
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
   for (const user of users) {
     const [hour, minute] = (user.notify_time || '07:00').split(':').map(Number);
-    const key = `${user.id}_${todayStr}`;
-    if (now.getHours() === hour && now.getMinutes() === minute && !sentToday[key]) {
-      sentToday[key] = true;
+    const keyId = `${user.id}_${todayStr}`;
+    const alreadySent = db.prepare('SELECT value FROM app_state WHERE key = ?').get(keyId);
+    if (!alreadySent && (now.getHours() > hour || (now.getHours() === hour && now.getMinutes() >= minute))) {
+      db.prepare('INSERT OR IGNORE INTO app_state (key, value) VALUES (?, ?)').run(keyId, '1');
       try {
         const { sendDailySummary } = await import('./services/notification.js');
         await sendDailySummary(user.id);
-        console.log(`[Cron] Summary sent to user ${user.id}`);
+        console.log(`[Notify] Summary sent to user ${user.id}`);
       } catch (err) {
-        console.error(`[Cron] Failed:`, err.message);
+        console.error(`[Notify] Failed:`, err.message);
       }
     }
   }
+}
+
+cron.schedule('* * * * *', checkAndSendNotifications);
+
+app.use('/api', (req, res, next) => {
+  checkAndSendNotifications().catch(() => {});
+  next();
 });
+
+checkAndSendNotifications().catch(() => {});
 
 app.listen(config.PORT, () => {
   console.log(`Server running on http://localhost:${config.PORT}`);
