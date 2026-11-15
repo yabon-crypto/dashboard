@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>寫作工具與思考</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f8fc; --surface:#ffffff; --ink:#16233f; --muted:#5b6782; --line:#d6deec;
+  --accent:#f08a4b; --navy:#1d2f55;
+  --r1:#2f7fc1; --r1-bg:#e6f2fc;
+  --r2:#7a62c9; --r2-bg:#efebfb;
+  --r3:#e07a3a; --r3-bg:#fdf0e6;
+  --r4:#2c9a73; --r4-bg:#e5f5ee;
+  --shadow:0 1px 2px rgba(22,35,63,.06),0 4px 14px rgba(22,35,63,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1524; --surface:#18213a; --ink:#e7ecf7; --muted:#9aa6c2; --line:#2a3656;
+    --navy:#2a3f6e;
+    --r1:#6fb3ec; --r1-bg:#162b44; --r2:#a994f0; --r2-bg:#241f44;
+    --r3:#f3a06a; --r3-bg:#3a2516; --r4:#5fcfa4; --r4-bg:#123328;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1524; --surface:#18213a; --ink:#e7ecf7; --muted:#9aa6c2; --line:#2a3656;
+  --navy:#2a3f6e;
+  --r1:#6fb3ec; --r1-bg:#162b44; --r2:#a994f0; --r2-bg:#241f44;
+  --r3:#f3a06a; --r3-bg:#3a2516; --r4:#5fcfa4; --r4-bg:#123328;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding:32px 16px 48px}
+header{text-align:center;margin-bottom:28px}
+h1{font-family:"Noto Serif TC",serif;font-weight:900;font-size:clamp(1.6rem,4vw,2.8rem);line-height:1.25;margin:0 0 14px;letter-spacing:.02em}
+h1 .brand{position:relative;white-space:nowrap}
+h1 .brand::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:6px;border-radius:6px;background:var(--accent);opacity:.85}
+.lead{display:inline-block;max-width:860px;background:var(--r1-bg);border-radius:999px;padding:12px 28px;color:var(--ink);font-size:clamp(.92rem,1.6vw,1.05rem)}
+.toolbar{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:18px 0 0}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;font-size:.88rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* grid */
+.board{position:relative}
+.row{display:grid;grid-template-columns:170px repeat(7,1fr);gap:0;align-items:stretch;margin-bottom:26px;position:relative}
+.label{border-radius:14px 0 0 14px;padding:14px 18px 14px 14px;clip-path:polygon(0 0,88% 0,100% 50%,88% 100%,0 100%);margin-right:10px}
+.label .num{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;font-size:.85rem}
+.label h3{margin:6px 0 4px;font-family:"Noto Serif TC",serif;font-size:1.12rem}
+.label p{margin:0;font-size:.82rem;color:var(--muted);line-height:1.45}
+.cell{position:relative;padding-right:18px}
+.cell:last-child{padding-right:0}
+.cell:not(:last-child)::after{content:"";position:absolute;right:4px;top:50%;width:10px;height:10px;border-top:2px solid var(--ink);border-right:2px solid var(--ink);transform:translateY(-50%) rotate(45deg);opacity:.75}
+.card{width:100%;height:100%;min-height:128px;border-radius:12px;border:1.5px solid var(--c);background:var(--cbg);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:12px 6px;cursor:pointer;font:inherit;text-align:center;box-shadow:var(--shadow);transition:transform .15s ease,box-shadow .15s ease,opacity .2s}
+.card:hover,.card:focus-visible{transform:translateY(-3px);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 35%,transparent),var(--shadow)}
+.card svg{width:38px;height:38px;color:var(--c);margin-bottom:4px}
+.card b{font-family:"Noto Serif TC",serif;font-size:1.12rem}
+.card small{font-size:.78rem;color:var(--muted)}
+.card.dim{opacity:.28}
+.card.on{box-shadow:0 0 0 3px var(--c),var(--shadow)}
+.down{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);width:2px;height:20px;background:var(--ink);opacity:.75}
+.down::after{content:"";position:absolute;left:-4px;bottom:0;width:8px;height:8px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.r1{--c:var(--r1);--cbg:var(--r1-bg)} .r2{--c:var(--r2);--cbg:var(--r2-bg)}
+.r3{--c:var(--r3);--cbg:var(--r3-bg)} .r4{--c:var(--r4);--cbg:var(--r4-bg)}
+.loop{position:absolute;right:-26px;top:8%;bottom:10%;width:18px;border:2px solid var(--ink);border-left:none;border-radius:0 12px 12px 0;opacity:.55}
+.loop-tag{position:absolute;right:-30px;top:50%;transform:translate(100%,-50%) rotate(90deg);transform-origin:left center;font-size:.72rem;color:var(--muted);white-space:nowrap}
+
+/* detail */
+.detail{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--c,var(--navy));border-radius:12px;padding:16px 20px;margin:4px 0 28px;box-shadow:var(--shadow);min-height:84px}
+.detail h4{margin:0 0 4px;font-size:1.05rem}
+.detail p{margin:0;color:var(--muted)}
+
+/* summary band */
+.band{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr 1.2fr;margin:8px 0 36px}
+.band div{padding:16px 22px 16px 34px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%);margin-right:-10px;font-size:.92rem;display:flex;align-items:center}
+.band div:first-child{clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%);border-radius:12px 0 0 12px;background:var(--navy);color:#fff;padding-left:20px;gap:12px}
+.band div:first-child strong{font-family:"Noto Serif TC",serif;font-size:1.25rem;white-space:nowrap}
+.band div:last-child{clip-path:polygon(0 0,100% 0,100% 100%,0 100%,18px 50%);border-radius:0 12px 12px 0;margin-right:0}
+.b1{background:var(--r1-bg)} .b2{background:var(--r2-bg)} .b3{background:var(--r3-bg)} .b4{background:var(--r4-bg)}
+
+/* analysis */
+section.analysis{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px clamp(16px,3vw,32px);box-shadow:var(--shadow)}
+section.analysis h2{font-family:"Noto Serif TC",serif;margin:0 0 12px;font-size:1.5rem}
+section.analysis h3{margin:22px 0 8px;font-size:1.08rem}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.box{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--bg)}
+.box h5{margin:0 0 6px;font-size:.98rem;display:flex;align-items:center;gap:8px}
+.box h5 i{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block}
+.box p,.box li{font-size:.9rem;color:var(--muted);margin:0}
+.box ul{margin:0;padding-left:18px}
+ol.take{padding-left:20px;margin:0} ol.take li{margin-bottom:6px}
+footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.85rem;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+
+@media (max-width:1000px){
+  .row{grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+  .label{grid-column:1/-1;clip-path:none;border-radius:12px;margin:0}
+  .cell{padding:0}
+  .cell::after,.down,.loop,.loop-tag{display:none}
+  .card{min-height:112px}
+  .band{grid-template-columns:1fr}
+  .band div,.band div:first-child,.band div:last-child{clip-path:none;border-radius:10px;margin:0 0 8px;padding:12px 16px}
+}
+@media (min-width:600px) and (max-width:1000px){ .row{grid-template-columns:repeat(4,1fr)} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>用 <span class="brand">Claude</span> 做自己的寫作工具後，<br>我更理解寫作的價值</h1>
+    <div class="lead">AI 讓編輯器、排版與匯出變得容易，卻沒有替人完成思考；當工具可以從自己的 Workflow 長出來，真正值得鍛鍊的反而是<strong>理解、驗證與寫成自己的觀點</strong>。</div>
+    <div class="toolbar" role="group" aria-label="篩選路徑">
+      <button class="chip" data-path="all" aria-pressed="true">全部</button>
+      <button class="chip" data-path="tool">工具線（Claude → 能力）</button>
+      <button class="chip" data-path="think">思考主軸（需求 → 正文 → 理解 → 驗證 → 創作）</button>
+      <button class="chip" data-path="atom">單元化線（Atomic Essay → 資料結構 → 疑問）</button>
+    </div>
+  </header>
+
+  <div class="board" id="board"></div>
+
+  <div class="detail" id="detail" aria-live="polite">
+    <h4>點選任一卡片</h4>
+    <p>查看該節點在整個寫作流程中的角色與實作建議。</p>
+  </div>
+
+  <div class="band">
+    <div><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3 6.6 7.2.7-5.4 4.8 1.6 7.1L12 17.6 5.6 21.2l1.6-7.1L1.8 9.3 9 8.6z"/></svg><strong>綜合觀點</strong><span>從工具使用到思考升級，讓寫作成為長期可累積的能力。</span></div>
+    <div class="b1">AI 讓編輯器、排版與匯出變得容易。</div>
+    <div class="b2">卻沒有替人完成思考。</div>
+    <div class="b3">當工具可以從自己的 Workflow 長出來，</div>
+    <div class="b4">真正值得鍛鍊的反而是理解、驗證與寫成自己的觀點。</div>
+  </div>
+
+  <section class="analysis">
+    <h2>圖像分析</h2>
+    <p>這張資訊圖以 <strong>4 層 × 7 節點</strong> 的矩陣呈現一個「用 AI 打造個人寫作工具」的歷程。橫向是每一層內部的推進順序，縱向箭頭把關鍵節點串到下一層，右側的回流箭頭則表示第四層的成果會再回饋到前三層，形成循環迭代。</p>
+
+    <h3>四個層次</h3>
+    <div class="cols">
+      <div class="box r1"><h5><i></i>① 問題或觀察｜工具層</h5><p>從 Claude、寫作、需求出發，經過 Workflow 與 HTML，最後落地成一個「編輯器」。重點是：工具應該由自己的需求與流程長出來。</p></div>
+      <div class="box r2"><h5><i></i>② 概念架構｜結構層</h5><p>以 Atomic Essay（原子化短文）為單位，依「核心觀點 → 小標題 → 正文 → 結論」組織文章，並用四色區分內容類型、以筆記保存素材。</p></div>
+      <div class="box r3"><h5><i></i>③ 實踐與回饋｜思考層</h5><p>資料結構與介面降低操作門檻後，真正的工作是「摘要 → 理解 → 驗證 → 思考 → 例子」。這一層是全圖的價值核心。</p></div>
+      <div class="box r4"><h5><i></i>④ 長期能力｜產出層</h5><p>從提出疑問、補圖、匯出、保存，到形塑觀點、完成文章，最終累積為「能力」，再回流到工具與結構中持續優化。</p></div>
+    </div>
+
+    <h3>三條值得注意的縱向路徑</h3>
+    <div class="cols">
+      <div class="box"><h5>單元化線</h5><p>Claude → Atomic Essay → 資料結構 → 疑問：AI 協作的起點，是把內容拆成可重組的小單位，並從問題開始寫。</p></div>
+      <div class="box"><h5>思考主軸</h5><p>需求 → 正文 → 理解；驗證 → 創作：釐清目標後展開論述，論述必須經過個人詮釋與驗證，才能成為獨特觀點。</p></div>
+      <div class="box"><h5>格式線</h5><p>HTML → 四色 → 思考：彈性輸出與視覺分類不是目的，而是幫助深入探索問題的鷹架。</p></div>
+    </div>
+
+    <h3>核心結論</h3>
+    <ol class="take">
+      <li><strong>工具門檻已被 AI 拉平</strong>：編輯器、排版、匯出這類「做工具」的工作變得便宜。</li>
+      <li><strong>思考仍無法外包</strong>：圖中的橘色層（理解、驗證、思考）沒有任何一格是 AI 可以代勞的。</li>
+      <li><strong>個人化 Workflow 是槓桿</strong>：工具從自己的流程長出來，才能真正服務思考，而非反過來限制思考。</li>
+      <li><strong>寫作是可累積的能力</strong>：右側回流箭頭說明每一次完成的文章，都會回頭強化下一輪的工具、結構與思考。</li>
+    </ol>
+  </section>
+
+  <footer><span>用 Obsidian 打造學術筆記力</span><span>原圖作者：@chihua.wang.3</span></footer>
+</div>
+
+<script>
+const I = {
+  spark:'<path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9 4.9 19.1"/>',
+  doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>',
+  wrench:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>',
+  clip:'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M9 11h6M9 15h6M9 19h4"/>',
+  flow:'<rect x="9" y="2" width="6" height="5" rx="1"/><rect x="2" y="16" width="6" height="5" rx="1"/><rect x="16" y="16" width="6" height="5" rx="1"/><path d="M12 7v4M5 16v-3h14v3"/>',
+  code:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m9 10-2 2 2 2M15 10l2 2-2 2M13 9l-2 6"/>',
+  window:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20M6 6.5h.01M9 6.5h.01"/>',
+  copy:'<rect x="8" y="2" width="13" height="16" rx="2"/><path d="M4 6v14a2 2 0 0 0 2 2h11M12 7h5M12 11h5M12 15h3"/>',
+  nodes:'<circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><path d="m10.5 7.5-4 9M13.5 7.5l4 9"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  type:'<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
+  flag:'<path d="M4 22V4M4 4h13l-2 4 2 4H4" fill="currentColor"/>',
+  dots:'<circle cx="7" cy="7" r="3.5" fill="#ef6b5b" stroke="none"/><circle cx="17" cy="7" r="3.5" fill="#6b7cf0" stroke="none"/><circle cx="7" cy="17" r="3.5" fill="#4fb06f" stroke="none"/><circle cx="17" cy="17" r="3.5" fill="#f39b3c" stroke="none"/>',
+  note:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/>',
+  db:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  search:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h5M14 2l6 6v3M14 2v6h6M8 9h3M8 13h3"/><circle cx="16" cy="17" r="3"/><path d="m18.5 19.5 2.5 2.5"/>',
+  brain:'<path d="M12 4a4 4 0 0 0-7.5 2A4 4 0 0 0 4 13a4 4 0 0 0 3 6h2v3M12 4a4 4 0 0 1 7.5 2A4 4 0 0 1 20 13a4 4 0 0 1-3 6h-2v3M12 4v14"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>',
+  bulb:'<path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/>',
+  ask:'<path d="M21 11.5a8.4 8.4 0 0 1-12.6 7.3L3 21l1.9-5A8.4 8.4 0 1 1 21 11.5z"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 2.2-2.4 3.2M12 16h.01"/>',
+  image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+  upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>',
+  box:'<path d="M3 12h18M3 12l2.5-7h13L21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM7 16h.01M10 16h.01"/>',
+  pen:'<path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z"/><path d="m15 5 4 4"/>',
+  chart:'<rect x="3" y="14" width="4" height="7" rx="1" fill="currentColor"/><rect x="10" y="9" width="4" height="12" rx="1" fill="currentColor"/><rect x="17" y="3" width="4" height="18" rx="1" fill="currentColor"/>'
+};
+
+const ROWS = [
+  {cls:'r1',title:'問題或觀察',sub:'從需求出發\n定義寫作的起點',items:[
+    ['Claude','AI 作為協作夥伴','spark','把 AI 當成協作夥伴而非代筆者：它擅長快速搭建工具、整理格式，但判斷與觀點仍由自己負責。'],
+    ['寫作','把思考化為文字','doc','寫作的本質是把模糊的想法轉成可檢視的文字，工具只是讓這個過程更順手。'],
+    ['工具','讓流程更順暢','wrench','好工具的標準是「減少摩擦」：讓你少花時間在操作上，多花時間在思考上。'],
+    ['需求','釐清寫作目標','clip','先問「我寫這篇要解決什麼問題？讀者是誰？」——需求清楚，後面的結構與工具才有方向。'],
+    ['Workflow','串連個人工作流','flow','把蒐集、整理、撰寫、輸出串成一條自己的流程；工具應該從這條流程裡長出來。'],
+    ['HTML','支援彈性輸出','code','以 HTML 作為中介格式，可以同時輸出成網頁、簡報、PDF 等，降低排版成本。'],
+    ['編輯器','提供書寫介面','window','最終落地成一個符合自己習慣的編輯器——這是 AI 讓「做工具」變簡單的最佳例證。']]},
+  {cls:'r2',title:'概念架構',sub:'建立寫作系統\n的結構與連結',items:[
+    ['Atomic Essay','以小單位組合內容','copy','原子化短文：每篇只講一個觀點、篇幅短，可以像積木一樣重組成長文。'],
+    ['核心觀點','形成文章主軸','nodes','一句話說得出的主張，是整篇文章的錨點；其他段落都應服務它。'],
+    ['小標題','組織段落結構','list','用小標題先搭骨架，讓論證層次一目了然，也方便讀者掃讀。'],
+    ['正文','展開論述與分析','type','在骨架上展開證據、推理與分析；這是需要最多思考投入的部分。'],
+    ['結論','收束並回應問題','flag','回到開頭的問題，明確交代「所以呢？」，讓文章有收尾。'],
+    ['四色','區分內容類型','dots','以四種顏色標示不同類型的內容（例如：觀點、證據、例子、疑問），讓結構可視化。'],
+    ['筆記','記錄想法與素材','note','平時累積的筆記是寫作的原料庫，也是 Atomic Essay 的來源。']]},
+  {cls:'r3',title:'實踐與回饋',sub:'從內容到成品\n持續迭代優化',items:[
+    ['資料結構','整理與連結資訊','db','把筆記與段落用標籤、連結、欄位結構化，資訊才能被重新找到與組合。'],
+    ['介面','降低操作門檻','window','介面設計的目的不是好看，而是讓寫作時不必分心處理工具。'],
+    ['摘要','快速掌握重點','search','先用摘要確認自己讀懂了什麼——AI 可以輔助，但要自己核對。'],
+    ['理解','建立個人詮釋','brain','把資訊轉成「我怎麼看」：這一步無法外包，是寫作價值的起點。'],
+    ['驗證','檢查並修正觀點','shield','回頭檢查證據與邏輯，主動找反例；這正是本圖強調最值得鍛鍊的能力。'],
+    ['思考','深入探索問題','bulb','在驗證之後繼續追問：為什麼？還有什麼可能？讓觀點更深一層。'],
+    ['例子','用實例具體化','note','用具體例子把抽象觀點落地，讓讀者能理解並記住。']]},
+  {cls:'r4',title:'長期能力',sub:'內化為可持續\n的寫作力',items:[
+    ['疑問','提出關鍵問題','ask','好文章始於好問題；能提出關鍵問題，本身就是一種長期能力。'],
+    ['圖片','補充視覺與脈絡','image','以圖表或圖像補足文字難以表達的結構與脈絡。'],
+    ['匯出','轉換為多種格式','upload','一次撰寫、多處發布：網頁、PDF、社群貼文等。'],
+    ['保存','長期留存與管理','box','建立可長期維護的檔案系統，讓作品與素材持續累積。'],
+    ['創作','形塑獨特觀點','pen','經過理解與驗證的觀點，才會成為真正屬於自己的創作。'],
+    ['文章','完成可公開的作品','doc','把成果整理成可公開的完整作品，接受讀者回饋。'],
+    ['能力','持續提升寫作力','chart','每一輪產出都回流強化工具、結構與思考，寫作力因此能長期累積。']]}
+];
+// downward links: [rowIndex, colIndex] -> next row same column
+const DOWN = [[0,0],[0,3],[0,5],[0,6],[1,0],[1,3],[1,5],[2,0],[2,4]];
+const PATHS = {
+  tool:['0-0','0-1','0-2','0-3','0-4','0-5','0-6','3-6'],
+  think:['0-3','1-3','2-3','2-4','3-4'],
+  atom:['0-0','1-0','2-0','3-0']
+};
+
+const board = document.getElementById('board');
+const detail = document.getElementById('detail');
+const svg = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
+
+ROWS.forEach((row, r) => {
+  const el = document.createElement('div');
+  el.className = 'row ' + row.cls;
+  el.innerHTML = `<div class="label" style="background:var(--cbg)"><span class="num">${r+1}</span><h3>${row.title}</h3><p>${row.sub.replace('\n','<br>')}</p></div>` +
+    row.items.map((it, c) => `<div class="cell"><button class="card" data-id="${r}-${c}">${svg(it[2])}<b>${it[0]}</b><small>${it[1]}</small></button>${DOWN.some(d=>d[0]===r&&d[1]===c)?'<span class="down"></span>':''}</div>`).join('');
+  board.appendChild(el);
+});
+const loop = document.createElement('div'); loop.className='loop'; board.appendChild(loop);
+const tag = document.createElement('div'); tag.className='loop-tag'; tag.textContent='持續迭代回饋'; board.appendChild(tag);
+
+const cards = [...document.querySelectorAll('.card')];
+cards.forEach(card => card.addEventListener('click', () => {
+  const [r,c] = card.dataset.id.split('-').map(Number);
+  const it = ROWS[r].items[c];
+  cards.forEach(x => x.classList.toggle('on', x === card));
+  detail.style.setProperty('--c', getComputedStyle(card).getPropertyValue('--c'));
+  detail.innerHTML = `<h4>${ROWS[r].title} ・ ${it[0]}<span style="font-weight:400;color:var(--muted)">｜${it[1]}</span></h4><p>${it[3]}</p>`;
+}));
+
+document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.chip').forEach(b => b.setAttribute('aria-pressed', b === btn));
+  const p = PATHS[btn.dataset.path];
+  cards.forEach(card => card.classList.toggle('dim', !!p && !p.includes(card.dataset.id)));
+}));
+</script>
+</body>
+</html>
